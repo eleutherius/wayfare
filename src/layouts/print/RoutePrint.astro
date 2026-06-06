@@ -1,0 +1,217 @@
+---
+import type { CollectionEntry } from "astro:content";
+import RouteTimeline from "@/components/RouteTimeline.astro";
+import MapLinks from "@/components/MapLinks.astro";
+import LeafletMap from "@/components/LeafletMap.astro";
+import type { MarkerData } from "@/lib/types";
+import { googleMaps, appleMaps } from "@/lib/maplinks";
+
+interface Props {
+  route: CollectionEntry<"routes">;
+  placesMap: Map<string, CollectionEntry<"places">>;
+  base?: string;
+}
+
+const { route, placesMap, base = "" } = Astro.props;
+const { title, city, mode, date, stops } = route.data;
+const dateStr = date
+  ? new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date)
+  : null;
+
+const lats = stops.map((s) => placesMap.get(s.place)?.data.lat ?? 0).filter(Boolean);
+const lngs = stops.map((s) => placesMap.get(s.place)?.data.lng ?? 0).filter(Boolean);
+const midLat = lats.reduce((a, b) => a + b, 0) / (lats.length || 1);
+const midLng = lngs.reduce((a, b) => a + b, 0) / (lngs.length || 1);
+
+const markers: MarkerData[] = stops.flatMap((s) => {
+  const place = placesMap.get(s.place);
+  if (!place) return [];
+  return [{
+    lat: place.data.lat,
+    lng: place.data.lng,
+    title: place.data.title,
+    slug: s.place,
+    category: place.data.category,
+    googleUrl: googleMaps(place.data.lat, place.data.lng),
+    appleUrl: appleMaps(place.data.lat, place.data.lng, place.data.title),
+  }];
+});
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — Print</title>
+  </head>
+  <body>
+    <header class="print-header">
+      <div class="print-header__site">Wayfare</div>
+      <h1 class="print-header__title">{title}</h1>
+      <div class="print-header__meta">
+        {city} · {mode}{dateStr ? ` · ${dateStr}` : ""}
+      </div>
+    </header>
+
+    <figure class="static-map">
+      <LeafletMap id="print-map" {markers} height="220px" zoom={14} base={base} />
+    </figure>
+
+    <section class="print-narrative">
+      <slot />
+    </section>
+
+    <section class="print-stops">
+      <h2>Stops</h2>
+      <RouteTimeline {stops} {placesMap} {base} />
+    </section>
+
+    <footer class="print-footer">
+      <MapLinks lat={midLat} lng={midLng} title={title} />
+      <span class="print-footer__url">Wayfare personal travel guide</span>
+    </footer>
+  </body>
+</html>
+
+<style>
+  /* ── Print-only stylesheet — never imported by screen layouts ── */
+
+  :root {
+    --text: #0a0a0a;
+    --muted: #555;
+    --accent: #c0392b;
+    --border: #ccc;
+    --font-body: "Georgia", serif;
+    --font-ui: system-ui, sans-serif;
+  }
+
+  @page {
+    size: A4;
+    margin: 18mm 20mm 22mm;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 11pt;
+  }
+
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-ui);
+    page-break-after: avoid;
+  }
+
+  a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  /* Header */
+  .print-header {
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 6pt;
+    margin-bottom: 14pt;
+    page-break-after: avoid;
+  }
+
+  .print-header__site {
+    font-family: var(--font-ui);
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 4pt;
+  }
+
+  .print-header__title {
+    font-size: 22pt;
+    margin: 0 0 4pt;
+  }
+
+  .print-header__meta {
+    font-family: var(--font-ui);
+    font-size: 9pt;
+    color: var(--muted);
+    text-transform: capitalize;
+  }
+
+  /* Map */
+  .static-map {
+    margin: 0 0 16pt;
+    page-break-inside: avoid;
+  }
+
+  /* Override LeafletMap's @media print { display: none } so tiles show in PDF.
+     :global() is required because .leaflet-wrap lives inside LeafletMap.astro
+     and has a different Astro scope attribute. */
+  @media print {
+    :global(.leaflet-wrap) {
+      display: block !important;
+      height: 220px !important;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    :global(.leaflet-control-container) {
+      display: none !important;
+    }
+  }
+
+  /* Narrative */
+  .print-narrative {
+    margin-bottom: 16pt;
+  }
+
+  .print-narrative p {
+    margin: 0 0 8pt;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Stops section */
+  .print-stops {
+    page-break-before: always;
+  }
+
+  .print-stops h2 {
+    font-size: 14pt;
+    margin: 0 0 12pt;
+    padding-bottom: 4pt;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Footer */
+  .print-footer {
+    position: running(footer);
+    font-family: var(--font-ui);
+    font-size: 8pt;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 4pt;
+    margin-top: 24pt;
+  }
+
+  @page {
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-family: system-ui, sans-serif;
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+</style>

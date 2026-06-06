@@ -1,0 +1,138 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PlaceCard from "@/components/PlaceCard.astro";
+
+export async function getStaticPaths() {
+  const allPlaces = await getCollection("places");
+  const allRoutes = await getCollection("routes");
+
+  const cities = [...new Set(allPlaces.map((p) => p.data.city))];
+
+  return cities.map((city) => ({
+    params: { city: encodeURIComponent(city.toLowerCase()) },
+    props: {
+      cityName: city,
+      places: allPlaces.filter((p) => p.data.city === city),
+      routes: allRoutes.filter((r) => r.data.city === city),
+    },
+  }));
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { cityName, places, routes } = Astro.props;
+
+const sortedPlaces = [...places].sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<Base title={cityName} description={`Places and routes in ${cityName}`} base={base}>
+  <header class="page-header">
+    <div class="page-header__breadcrumb">
+      <a href={`${base}/`}>Home</a> › Cities
+    </div>
+    <h1>{cityName}</h1>
+    <p class="page-header__count">
+      {sortedPlaces.length} place{sortedPlaces.length !== 1 ? "s" : ""}
+      {routes.length > 0 ? ` · ${routes.length} route${routes.length !== 1 ? "s" : ""}` : ""}
+    </p>
+  </header>
+
+  {
+    routes.length > 0 && (
+      <section class="city-section">
+        <h2 class="city-section__heading">Routes</h2>
+        <ul class="route-list">
+          {routes.map((route) => (
+            <li>
+              <a href={`${base}/routes/${route.id}`} class="route-link">
+                <span class="route-link__title">{route.data.title}</span>
+                <span class="route-link__meta">
+                  {route.data.mode} · {route.data.stops.length} stops
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section class="city-section">
+    <h2 class="city-section__heading">Places</h2>
+    <div class="card-grid">
+      {sortedPlaces.map((place) => <PlaceCard {place} base={base} />)}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+  }
+  .page-header__breadcrumb {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  .page-header__breadcrumb a {
+    color: var(--muted);
+  }
+  .page-header h1 {
+    margin: 0 0 0.2rem;
+  }
+  .page-header__count {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+  }
+
+  .city-section {
+    margin-bottom: 2.5rem;
+  }
+  .city-section__heading {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+
+  .route-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .route-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--text);
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    transition: border-color 0.15s;
+    font-family: var(--font-ui);
+  }
+  .route-link:hover {
+    border-color: var(--accent);
+  }
+  .route-link__title {
+    font-weight: 600;
+    font-size: 0.97rem;
+  }
+  .route-link__meta {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: capitalize;
+    margin-top: 2px;
+  }
+</style>

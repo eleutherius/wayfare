@@ -1,0 +1,166 @@
+---
+/**
+ * Client-side-only Leaflet map. Never rendered server-side.
+ *
+ * Data is passed via a <script type="application/json"> tag so
+ * the client script can read it after hydration without define:vars
+ * (which disables module bundling).
+ */
+import type { MarkerData, TrackData } from "@/lib/types";
+export type { MarkerData, TrackData } from "@/lib/types";
+
+interface Props {
+  id: string;
+  markers: MarkerData[];
+  track?: TrackData | null;
+  center?: [number, number];
+  zoom?: number;
+  height?: string;
+  base?: string;
+}
+
+const {
+  id,
+  markers,
+  track = null,
+  center,
+  zoom = 14,
+  height = "400px",
+  base = "",
+} = Astro.props;
+
+const computedCenter =
+  center ??
+  (markers.length > 0
+    ? ([markers[0].lat, markers[0].lng] as [number, number])
+    : ([13.75, 100.52] as [number, number]));
+
+const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, base })
+  .replace(/<\/script>/gi, "<\\/script>");
+---
+
+<div
+  id={id}
+  class="leaflet-wrap"
+  style={`height: ${height};`}
+  aria-label="Interactive map"
+>
+  <!-- Progressive enhancement: show a static fallback until JS loads -->
+  <noscript>
+    <p class="leaflet-noscript">Enable JavaScript to view the interactive map.</p>
+  </noscript>
+</div>
+
+<!-- Data payload for the client script -->
+<script is:inline type="application/json" id={`${id}-data`} set:html={payload}></script>
+
+<script>
+  import "leaflet/dist/leaflet.css";
+  import L from "leaflet";
+  import type { MarkerData, TrackData } from "@/lib/types";
+
+  interface MapPayload {
+    markers: MarkerData[];
+    track: TrackData | null;
+    center: [number, number];
+    zoom: number;
+    base: string;
+  }
+
+  function initMap(containerId: string) {
+    const container = document.getElementById(containerId);
+    const dataEl = document.getElementById(`${containerId}-data`);
+    if (!container || !dataEl) return;
+
+    const { markers, track, center, zoom, base } = JSON.parse(
+      dataEl.textContent ?? "{}"
+    ) as MapPayload;
+
+    // Prevent double-init (e.g. hot reload)
+    if ((container as HTMLElement & { _leaflet_id?: number })._leaflet_id) return;
+
+    const map = L.map(container).setView(center, zoom);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const categoryColour: Record<string, string> = {
+      coffee: "#6f4e37",
+      food: "#e67e22",
+      sight: "#2980b9",
+      viewpoint: "#27ae60",
+      stay: "#8e44ad",
+      other: "#7f8c8d",
+    };
+
+    for (const m of markers) {
+      const colour = categoryColour[m.category] ?? "#333";
+      const icon = L.divIcon({
+        className: "",
+        html: `<span style="
+          display:block;width:14px;height:14px;border-radius:50%;
+          background:${colour};border:2px solid #fff;
+          box-shadow:0 1px 4px rgba(0,0,0,.4)"></span>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      });
+
+      const popupHtml = `
+        <strong><a href="${base}/places/${m.slug}">${m.title}</a></strong>
+        <br/>
+        <a href="${m.googleUrl}" target="_blank" rel="noopener">Google Maps</a>
+        &nbsp;·&nbsp;
+        <a href="${m.appleUrl}" target="_blank" rel="noopener">Apple Maps</a>
+      `;
+
+      L.marker([m.lat, m.lng], { icon }).bindPopup(popupHtml).addTo(map);
+    }
+
+    if (track) {
+      const geoJsonLayer = L.geoJSON(track as GeoJSON.GeoJsonObject, {
+        style: { color: "#e74c3c", weight: 3, opacity: 0.85 },
+      }).addTo(map);
+      if (markers.length === 0) {
+        map.fitBounds(geoJsonLayer.getBounds(), { padding: [24, 24] });
+      }
+    }
+
+    if (markers.length > 1) {
+      const latlngs = markers.map(
+        (m) => [m.lat, m.lng] as L.LatLngExpression
+      );
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [32, 32] });
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>(".leaflet-wrap[id]").forEach((el) => {
+    initMap(el.id);
+  });
+</script>
+
+<style>
+  .leaflet-wrap {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #e8e0d8;
+  }
+
+  .leaflet-noscript {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  @media print {
+    .leaflet-wrap {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,198 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  base?: string;
+}
+
+const { title, description = "Wayfare — a personal travel guide", base = "" } = Astro.props;
+const siteName = "Wayfare";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} — {siteName}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="site-header__inner container">
+        <a class="site-header__logo" href={`${base}/`}>{siteName}</a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href={`${base}/`}>Home</a>
+          <a href={`${base}/map`}>Map</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="container">
+      <slot />
+    </main>
+
+    <footer class="site-footer container">
+      <p>Personal travel notes. No affiliation with any business listed.</p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #faf8f5;
+    --surface: #fff;
+    --border: #e5e2db;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --accent: #c0392b;
+    --accent-dark: #922b21;
+    --font-body: "Georgia", "Times New Roman", serif;
+    --font-ui: system-ui, -apple-system, sans-serif;
+    --max-w: 860px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 17px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.7;
+  }
+
+  .container {
+    max-width: var(--max-w);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-ui);
+    line-height: 1.25;
+  }
+
+  a {
+    color: var(--accent);
+  }
+  a:hover {
+    color: var(--accent-dark);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -999px;
+    top: 1rem;
+  }
+  .skip-link:focus {
+    left: 1rem;
+    z-index: 9999;
+    background: var(--accent);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  /* ── Header ── */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 3.25rem;
+  }
+  .site-header__logo {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .site-nav {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+  }
+  .site-nav a {
+    text-decoration: none;
+    color: var(--muted);
+  }
+  .site-nav a:hover {
+    color: var(--accent);
+  }
+
+  /* ── Main ── */
+  main.container {
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+    min-height: calc(100dvh - 3.25rem - 5rem);
+  }
+
+  /* ── Footer ── */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  /* ── Prose ── */
+  .prose {
+    max-width: 65ch;
+  }
+  .prose p {
+    margin-block: 1rem;
+  }
+  .prose h2 {
+    margin-top: 2rem;
+  }
+
+  /* ── Grid helpers ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  /* ── Print baseline (overridden in print layouts) ── */
+  @media print {
+    .site-header,
+    .site-footer,
+    .site-nav {
+      display: none;
+    }
+  }
+</style>

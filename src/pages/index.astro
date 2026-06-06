@@ -1,0 +1,187 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PlaceCard from "@/components/PlaceCard.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const allPlaces = await getCollection("places");
+const allRoutes = await getCollection("routes");
+
+// Featured = highest-rated places (up to 6)
+const featured = [...allPlaces]
+  .filter((p) => p.data.rating != null)
+  .sort((a, b) => (b.data.rating ?? 0) - (a.data.rating ?? 0))
+  .slice(0, 6);
+
+// Unique cities
+const cities = [...new Set(allPlaces.map((p) => p.data.city))].sort();
+---
+
+<Base title="Home" base={base}>
+  <section class="hero">
+    <h1 class="hero__title">Wayfare</h1>
+    <p class="hero__lead">
+      A personal collection of places worth remembering — coffee shops, temples,
+      street kitchens, viewpoints. Visited, written about, linked to maps.
+    </p>
+  </section>
+
+  {
+    featured.length > 0 && (
+      <section class="section">
+        <h2 class="section__heading">Featured places</h2>
+        <div class="card-grid">
+          {featured.map((place) => (
+            <PlaceCard {place} base={base} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <div class="index-cols">
+    <section class="section">
+      <h2 class="section__heading">Cities</h2>
+      <ul class="pill-list">
+        {
+          cities.map((city) => (
+            <li>
+              <a
+                href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}
+                class="pill"
+              >
+                {city}
+                <span class="pill__count">
+                  {allPlaces.filter((p) => p.data.city === city).length}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    {
+      allRoutes.length > 0 && (
+        <section class="section">
+          <h2 class="section__heading">Routes</h2>
+          <ul class="route-list">
+            {allRoutes.map((route) => (
+              <li class="route-list__item">
+                <a href={`${base}/routes/${route.id}`} class="route-list__link">
+                  {route.data.title}
+                  <span class="route-list__meta">
+                    {route.data.city} · {route.data.mode} ·{" "}
+                    {route.data.stops.length} stops
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .hero {
+    padding-block: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  .hero__title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 0.5rem;
+  }
+  .hero__lead {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    margin: 0;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+  .section__heading {
+    font-size: 1.2rem;
+    margin: 0 0 1rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.8rem;
+    font-family: var(--font-ui);
+  }
+
+  .index-cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .pill-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-decoration: none;
+    font-family: var(--font-ui);
+    font-size: 0.87rem;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s;
+  }
+  .pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .pill__count {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .route-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .route-list__link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.97rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    transition: border-color 0.15s;
+  }
+  .route-list__link:hover {
+    border-color: var(--accent);
+  }
+  .route-list__meta {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: capitalize;
+    margin-top: 2px;
+  }
+</style>

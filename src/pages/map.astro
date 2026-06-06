@@ -1,0 +1,89 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import LeafletMap from "@/components/LeafletMap.astro";
+import { googleMaps, appleMaps } from "@/lib/maplinks";
+import type { MarkerData } from "@/lib/types";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const allPlaces = await getCollection("places");
+
+const markers: MarkerData[] = allPlaces.map((p) => ({
+  lat: p.data.lat,
+  lng: p.data.lng,
+  title: p.data.title,
+  slug: p.id,
+  category: p.data.category,
+  googleUrl: googleMaps(p.data.lat, p.data.lng),
+  appleUrl: appleMaps(p.data.lat, p.data.lng, p.data.title),
+}));
+---
+
+<Base title="Map" description="Overview map of all visited places" base={base}>
+  <header class="page-header">
+    <h1>All places</h1>
+    <p class="page-header__sub">{markers.length} places on the map</p>
+  </header>
+
+  <LeafletMap id="overview-map" {markers} height="600px" zoom={12} base={base} />
+
+  <div class="legend">
+    {
+      (["coffee", "food", "sight", "viewpoint", "stay", "other"] as const).map(
+        (cat) => (
+          <span class="legend__item" data-cat={cat}>
+            <span class="legend__dot" />
+            {cat}
+          </span>
+        )
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+  .page-header h1 {
+    margin: 0 0 0.25rem;
+  }
+  .page-header__sub {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .legend__item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-transform: capitalize;
+  }
+
+  .legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-cat="coffee"] .legend__dot { background: #6f4e37; }
+  [data-cat="food"] .legend__dot { background: #e67e22; }
+  [data-cat="sight"] .legend__dot { background: #2980b9; }
+  [data-cat="viewpoint"] .legend__dot { background: #27ae60; }
+  [data-cat="stay"] .legend__dot { background: #8e44ad; }
+  [data-cat="other"] .legend__dot { background: #7f8c8d; }
+</style>

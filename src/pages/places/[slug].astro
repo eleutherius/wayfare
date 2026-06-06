@@ -1,0 +1,168 @@
+---
+import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
+import Base from "@/layouts/Base.astro";
+import MapLinks from "@/components/MapLinks.astro";
+import LeafletMap from "@/components/LeafletMap.astro";
+import { googleMaps, appleMaps } from "@/lib/maplinks";
+import type { MarkerData } from "@/lib/types";
+
+export async function getStaticPaths() {
+  const places = await getCollection("places");
+  return places.map((place) => ({ params: { slug: place.id }, props: { place } }));
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { place } = Astro.props;
+const { title, lat, lng, category, city, date, cover, rating } = place.data;
+const { Content } = await render(place);
+
+const dateStr = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date);
+const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
+
+const marker: MarkerData = {
+  lat, lng, title,
+  slug: place.id,
+  category,
+  googleUrl: googleMaps(lat, lng),
+  appleUrl: appleMaps(lat, lng, title),
+};
+---
+
+<Base title={title} description={`${title} — ${city}`} base={base}>
+  <article class="place-detail">
+    {
+      cover && (
+        <figure class="place-detail__cover">
+          <Image
+            src={cover}
+            alt={title}
+            width={860}
+            height={480}
+            class="place-detail__cover-img"
+          />
+        </figure>
+      )
+    }
+
+    <header class="place-detail__header">
+      <div class="place-detail__meta">
+        <a href={`${base}/category/${category}`} class="place-detail__category"
+          >{category}</a
+        >
+        <span class="sep">·</span>
+        <a href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}
+          >{city}</a
+        >
+        <span class="sep">·</span>
+        <time datetime={date.toISOString()}>{dateStr}</time>
+      </div>
+      <h1 class="place-detail__title">{title}</h1>
+      {stars && <div class="place-detail__rating" aria-label={`Rating: ${rating} of 5`}>{stars}</div>}
+    </header>
+
+    <div class="place-detail__map">
+      <LeafletMap
+        id="place-map"
+        markers={[marker]}
+        center={[lat, lng]}
+        zoom={16}
+        height="280px"
+        base={base}
+      />
+    </div>
+
+    <div class="place-detail__actions">
+      <MapLinks {lat} {lng} {title} directions />
+    </div>
+
+    <div class="prose place-detail__story">
+      <Content />
+    </div>
+
+    <footer class="place-detail__footer">
+      <a href={`${base}/`} class="back-link">← Back to all places</a>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .place-detail__cover {
+    margin: 0 0 1.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .place-detail__cover-img {
+    width: 100%;
+    height: 340px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .place-detail__meta {
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .place-detail__meta a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .place-detail__meta a:hover {
+    text-decoration: underline;
+  }
+  .sep {
+    color: var(--border);
+  }
+
+  .place-detail__category {
+    text-transform: capitalize;
+  }
+
+  .place-detail__title {
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    margin: 0 0 0.35rem;
+  }
+
+  .place-detail__rating {
+    font-size: 1.1rem;
+    color: #f59e0b;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .place-detail__map {
+    margin-block: 1.5rem;
+  }
+
+  .place-detail__actions {
+    margin-bottom: 2rem;
+  }
+
+  .place-detail__story {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+  }
+
+  .place-detail__footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .back-link {
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--muted);
+  }
+  .back-link:hover {
+    color: var(--accent);
+  }
+</style>

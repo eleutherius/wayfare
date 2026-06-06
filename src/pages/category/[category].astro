@@ -1,0 +1,62 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import PlaceCard from "@/components/PlaceCard.astro";
+
+export async function getStaticPaths() {
+  const allPlaces = await getCollection("places");
+  const categories = [...new Set(allPlaces.map((p) => p.data.category))];
+  return categories.map((category) => ({
+    params: { category },
+    props: { places: allPlaces.filter((p) => p.data.category === category) },
+  }));
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { category } = Astro.params;
+const { places } = Astro.props;
+
+const sorted = [...places].sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+const label = category.charAt(0).toUpperCase() + category.slice(1);
+---
+
+<Base title={label} description={`All ${label} places`} base={base}>
+  <header class="page-header">
+    <div class="page-header__breadcrumb">
+      <a href={`${base}/`}>Home</a> › Categories
+    </div>
+    <h1>{label}</h1>
+    <p class="page-header__count">{sorted.length} place{sorted.length !== 1 ? "s" : ""}</p>
+  </header>
+
+  <div class="card-grid">
+    {sorted.map((place) => <PlaceCard {place} base={base} />)}
+  </div>
+</Base>
+
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+  }
+  .page-header__breadcrumb {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  .page-header__breadcrumb a {
+    color: var(--muted);
+  }
+  .page-header h1 {
+    margin: 0 0 0.2rem;
+    text-transform: capitalize;
+  }
+  .page-header__count {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+  }
+</style>

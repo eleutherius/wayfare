@@ -1,0 +1,182 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import RouteTimeline from "@/components/RouteTimeline.astro";
+import LeafletMap from "@/components/LeafletMap.astro";
+import { googleMaps, appleMaps } from "@/lib/maplinks";
+import { validateRouteStops } from "@/lib/validate-references";
+import type { MarkerData, TrackData } from "@/lib/types";
+
+export async function getStaticPaths() {
+  const routes = await getCollection("routes");
+  return routes.map((route) => ({ params: { slug: route.id }, props: { route } }));
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { route } = Astro.props;
+const { title, city, mode, date, stops, track } = route.data;
+
+// Validate that every stop references an existing place — fails the build loudly if broken
+await validateRouteStops(route.id, stops);
+
+const allPlaces = await getCollection("places");
+const placesMap = new Map(allPlaces.map((p) => [p.id, p]));
+
+const { Content } = await render(route);
+
+const dateStr = date
+  ? new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date)
+  : null;
+
+const markers: MarkerData[] = stops.flatMap((s) => {
+  const p = placesMap.get(s.place);
+  if (!p) return [];
+  const { lat, lng, category } = p.data;
+  return [{
+    lat, lng,
+    title: p.data.title,
+    slug: p.id,
+    category,
+    googleUrl: googleMaps(lat, lng),
+    appleUrl: appleMaps(lat, lng, p.data.title),
+  }] satisfies MarkerData[];
+});
+
+// Load GeoJSON track if specified (must be in public/)
+let trackData: TrackData | null = null;
+if (track) {
+  try {
+    // During SSG, public/ files are readable from the project root
+    const { readFile } = await import("fs/promises");
+    const raw = await readFile(`public/${track}`, "utf-8");
+    trackData = JSON.parse(raw) as TrackData;
+  } catch {
+    console.warn(`[routes/${route.id}] Could not load track file: ${track}`);
+  }
+}
+---
+
+<Base title={title} description={`${title} — ${city} route`} base={base}>
+  <article class="route-detail">
+    <header class="route-detail__header">
+      <div class="route-detail__breadcrumb">
+        <a href={`${base}/`}>Home</a> ›
+        <a href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}>{city}</a>
+      </div>
+      <h1 class="route-detail__title">{title}</h1>
+      <div class="route-detail__meta">
+        <span class="badge">{mode}</span>
+        <span>{stops.length} stops</span>
+        {dateStr && <time datetime={date?.toISOString()}>{dateStr}</time>}
+        <a href={`${base}/routes/${route.id}.print`} class="print-link">
+          🖨 Print / PDF
+        </a>
+      </div>
+    </header>
+
+    <div class="prose route-detail__narrative">
+      <Content />
+    </div>
+
+    <section class="route-detail__map">
+      <h2 class="section-label">Map</h2>
+      <LeafletMap
+        id="route-map"
+        {markers}
+        track={trackData}
+        height="420px"
+        base={base}
+      />
+    </section>
+
+    <section class="route-detail__stops">
+      <h2 class="section-label">Stops</h2>
+      <RouteTimeline {stops} {placesMap} {base} />
+    </section>
+  </article>
+</Base>
+
+<style>
+  .route-detail__header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .route-detail__breadcrumb {
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .route-detail__breadcrumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .route-detail__breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .route-detail__title {
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    margin: 0 0 0.6rem;
+  }
+
+  .route-detail__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    background: var(--border);
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--text);
+  }
+
+  .print-link {
+    margin-left: auto;
+    font-size: 0.82rem;
+    text-decoration: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    transition: border-color 0.15s;
+  }
+  .print-link:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .route-detail__narrative {
+    margin-bottom: 2.5rem;
+  }
+
+  .section-label {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+
+  .route-detail__map {
+    margin-bottom: 2.5rem;
+  }
+
+  .route-detail__stops {
+    margin-bottom: 2rem;
+  }
+</style>

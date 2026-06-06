@@ -1,0 +1,148 @@
+---
+import type { CollectionEntry } from "astro:content";
+import MapLinks from "./MapLinks.astro";
+
+interface Stop {
+  place: string;
+  arrive: string;
+  stay: number;
+  note?: string;
+}
+
+interface Props {
+  stops: Stop[];
+  placesMap: Map<string, CollectionEntry<"places">>;
+  base?: string;
+}
+
+const { stops, placesMap, base = "" } = Astro.props;
+---
+
+<ol class="timeline">
+  {
+    stops.map((stop, i) => {
+      const place = placesMap.get(stop.place);
+      if (!place) return null;
+      const { title, lat, lng, category } = place.data;
+      return (
+        <li class="timeline__item">
+          <div class="timeline__time">
+            <span class="timeline__arrive">{stop.arrive}</span>
+            <span class="timeline__stay">{stop.stay} min</span>
+          </div>
+          <div class="timeline__marker" aria-hidden="true">
+            <span class="timeline__dot">{i + 1}</span>
+            {i < stops.length - 1 && <span class="timeline__line" />}
+          </div>
+          <div class="timeline__content">
+            <span class="timeline__category">{category}</span>
+            <h3 class="timeline__title">
+              <a href={`${base}/places/${place.id}`}>{title}</a>
+            </h3>
+            {stop.note && <p class="timeline__note">{stop.note}</p>}
+            <MapLinks {lat} {lng} {title} directions />
+          </div>
+        </li>
+      );
+    })
+  }
+</ol>
+
+<style>
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .timeline__item {
+    display: grid;
+    grid-template-columns: 4.5rem 2rem 1fr;
+    gap: 0 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .timeline__time {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-top: 0.1rem;
+  }
+
+  .timeline__arrive {
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timeline__stay {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .timeline__marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .timeline__dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .timeline__line {
+    flex: 1;
+    width: 2px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .timeline__content {
+    padding-top: 0.1rem;
+  }
+
+  .timeline__category {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .timeline__title {
+    margin: 0.15rem 0 0.3rem;
+    font-size: 1.1rem;
+  }
+
+  .timeline__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .timeline__title a:hover {
+    text-decoration: underline;
+  }
+
+  .timeline__note {
+    font-size: 0.87rem;
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+    font-style: italic;
+  }
+
+  @media print {
+    .timeline__item {
+      page-break-inside: avoid;
+    }
+  }
+</style>

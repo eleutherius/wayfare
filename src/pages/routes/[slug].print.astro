@@ -1,0 +1,30 @@
+---
+/**
+ * Print view for a route. Served at /routes/[slug].print
+ * Playwright's build-pdf.mjs opens this URL and prints to PDF.
+ *
+ * Uses RoutePrint layout — no site header/footer, no Leaflet.
+ */
+import { getCollection, render } from "astro:content";
+import RoutePrint from "@/layouts/print/RoutePrint.astro";
+import { validateRouteStops } from "@/lib/validate-references";
+
+export async function getStaticPaths() {
+  const routes = await getCollection("routes");
+  return routes.map((route) => ({ params: { slug: route.id }, props: { route } }));
+}
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const { route } = Astro.props;
+
+await validateRouteStops(route.id, route.data.stops);
+
+const allPlaces = await getCollection("places");
+const placesMap = new Map(allPlaces.map((p) => [p.id, p]));
+
+const { Content } = await render(route);
+---
+
+<RoutePrint {route} {placesMap} {base}>
+  <Content />
+</RoutePrint>

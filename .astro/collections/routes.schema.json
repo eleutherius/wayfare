@@ -1,0 +1,85 @@
+{
+  "$ref": "#/definitions/routes",
+  "definitions": {
+    "routes": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "walking",
+            "transit",
+            "mixed"
+          ]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "integer",
+              "format": "unix-time"
+            }
+          ]
+        },
+        "track": {
+          "type": "string"
+        },
+        "stops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "place": {
+                "type": "string"
+              },
+              "arrive": {
+                "type": "string",
+                "pattern": "^\\d{2}:\\d{2}$",
+                "errorMessage": {
+                  "pattern": "Expected HH:MM"
+                }
+              },
+              "stay": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "place",
+              "arrive",
+              "stay"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "city",
+        "mode",
+        "stops"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
