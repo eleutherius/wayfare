@@ -87,25 +87,23 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
       maxZoom: 19,
     }).addTo(map);
 
-    const categoryColour: Record<string, string> = {
-      coffee: "#6f4e37",
-      food: "#e67e22",
-      sight: "#2980b9",
-      viewpoint: "#27ae60",
-      stay: "#8e44ad",
-      other: "#7f8c8d",
+    const categoryEmoji: Record<string, string> = {
+      coffee: "☕",
+      food: "🍜",
+      sight: "🏛️",
+      viewpoint: "🌅",
+      stay: "🏨",
+      other: "📍",
     };
 
     for (const m of markers) {
-      const colour = categoryColour[m.category] ?? "#333";
+      const emoji = categoryEmoji[m.category] ?? "📍";
       const icon = L.divIcon({
         className: "",
-        html: `<span style="
-          display:block;width:14px;height:14px;border-radius:50%;
-          background:${colour};border:2px solid #fff;
-          box-shadow:0 1px 4px rgba(0,0,0,.4)"></span>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
+        html: `<span style="display:block;font-size:28px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));user-select:none">${emoji}</span>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 28],
+        popupAnchor: [0, -28],
       });
 
       const popupHtml = `

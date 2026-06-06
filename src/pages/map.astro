@@ -29,14 +29,19 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
 
   <div class="legend">
     {
-      (["coffee", "food", "sight", "viewpoint", "stay", "other"] as const).map(
-        (cat) => (
-          <span class="legend__item" data-cat={cat}>
-            <span class="legend__dot" />
-            {cat}
-          </span>
-        )
-      )
+      ([
+        ["coffee", "☕"],
+        ["food", "🍜"],
+        ["sight", "🏛️"],
+        ["viewpoint", "🌅"],
+        ["stay", "🏨"],
+        ["other", "📍"],
+      ] as const).map(([cat, emoji]) => (
+        <span class="legend__item">
+          <span class="legend__emoji">{emoji}</span>
+          {cat}
+        </span>
+      ))
     }
   </div>
 </Base>
@@ -72,18 +77,8 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
     text-transform: capitalize;
   }
 
-  .legend__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 1.5px solid #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  .legend__emoji {
+    font-size: 1rem;
+    line-height: 1;
   }
-
-  [data-cat="coffee"] .legend__dot { background: #6f4e37; }
-  [data-cat="food"] .legend__dot { background: #e67e22; }
-  [data-cat="sight"] .legend__dot { background: #2980b9; }
-  [data-cat="viewpoint"] .legend__dot { background: #27ae60; }
-  [data-cat="stay"] .legend__dot { background: #8e44ad; }
-  [data-cat="other"] .legend__dot { background: #7f8c8d; }
 </style>
