@@ -1,4 +1,6 @@
 ---
+import "@/styles/global.css";
+
 interface Props {
   title: string;
   description?: string;
@@ -35,8 +37,8 @@ const siteName = "Wayfare";
 
     <header class="site-header">
       <div class="site-header__inner container">
-        <a class="site-header__logo" href={`${base}/`}>{siteName}</a>
-        <nav class="site-nav" aria-label="Main navigation">
+        <a class="wordmark" href={`${base}/`}>{siteName}</a>
+        <nav class="nav" aria-label="Main navigation">
           <a href={`${base}/`}>Home</a>
           <a href={`${base}/map`}>Map</a>
           <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
@@ -50,7 +52,7 @@ const siteName = "Wayfare";
       <slot />
     </main>
 
-    <footer class="site-footer container">
+    <footer class="site-footer">
       <p>Personal travel notes. No affiliation with any business listed.</p>
     </footer>
 
@@ -67,220 +69,3 @@ const siteName = "Wayfare";
     </script>
   </body>
 </html>
-
-<style is:global>
-  /* ── Light theme (default) ── */
-  :root {
-    --bg: #faf8f5;
-    --surface: #fff;
-    --border: #e5e2db;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --accent: #c0392b;
-    --accent-dark: #922b21;
-    --font-body: "Georgia", "Times New Roman", serif;
-    --font-ui: system-ui, -apple-system, sans-serif;
-    --max-w: 860px;
-  }
-
-  /* ── Dark theme ── */
-  html.dark {
-    --bg: #141414;
-    --surface: #1e1e1e;
-    --border: #2c2c2c;
-    --text: #ddd;
-    --muted: #888;
-    --accent: #e05252;
-    --accent-dark: #c03535;
-  }
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  html {
-    font-size: 17px;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    line-height: 1.7;
-    transition: background 0.2s, color 0.2s;
-  }
-
-  .container {
-    max-width: var(--max-w);
-    margin-inline: auto;
-    padding-inline: 1.25rem;
-  }
-
-  h1, h2, h3, h4 {
-    font-family: var(--font-ui);
-    line-height: 1.25;
-  }
-
-  a {
-    color: var(--accent);
-  }
-  a:hover {
-    color: var(--accent-dark);
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .skip-link {
-    position: absolute;
-    left: -999px;
-    top: 1rem;
-  }
-  .skip-link:focus {
-    left: 1rem;
-    z-index: 9999;
-    background: var(--accent);
-    color: #fff;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    text-decoration: none;
-  }
-
-  /* ── Header ── */
-  .site-header {
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .site-header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 3.25rem;
-  }
-  .site-header__logo {
-    font-family: var(--font-ui);
-    font-weight: 700;
-    font-size: 1.1rem;
-    text-decoration: none;
-    color: var(--text);
-  }
-  .site-nav {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-  }
-  .site-nav a {
-    text-decoration: none;
-    color: var(--muted);
-  }
-  .site-nav a:hover {
-    color: var(--accent);
-  }
-
-  /* ── Theme toggle button ── */
-  .theme-toggle {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    width: 2rem;
-    height: 2rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    transition: border-color 0.15s, color 0.15s;
-    padding: 0;
-  }
-  .theme-toggle:hover {
-    border-color: var(--text);
-    color: var(--text);
-  }
-
-  /* Sun icon in light mode, moon in dark mode */
-  .theme-toggle__icon::before {
-    content: "☀";
-    font-size: 1rem;
-  }
-  html.dark .theme-toggle__icon::before {
-    content: "☾";
-  }
-
-  /* ── Main ── */
-  main.container {
-    padding-top: 2rem;
-    padding-bottom: 4rem;
-    min-height: calc(100dvh - 3.25rem - 5rem);
-  }
-
-  /* ── Footer ── */
-  .site-footer {
-    border-top: 1px solid var(--border);
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
-    font-family: var(--font-ui);
-    font-size: 0.82rem;
-    color: var(--muted);
-  }
-
-  /* ── Prose ── */
-  .prose {
-    max-width: 65ch;
-  }
-  .prose p {
-    margin-block: 1rem;
-  }
-  .prose h2 {
-    margin-top: 2rem;
-  }
-
-  /* ── Grid helpers ── */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1.5rem;
-  }
-
-  /* ── Print baseline ── */
-  @media print {
-    .site-header,
-    .site-footer,
-    .site-nav {
-      display: none;
-    }
-  }
-
-  /* ── Fullscreen map page ── */
-  body.map-page {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
-  }
-  body.map-page main.container {
-    flex: 1;
-    min-height: 0;
-    padding: 0;
-    max-width: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  body.map-page .site-footer {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-</style>

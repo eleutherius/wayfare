@@ -41,11 +41,18 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
 <style>
   .place-card {
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface);
     display: flex;
     flex-direction: column;
+    transition: transform 0.25s var(--ease), border-color 0.25s var(--ease),
+                box-shadow 0.25s var(--ease);
+  }
+  .place-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    box-shadow: 0 14px 30px -18px #211B1633;
   }
 
   .place-card__img-link {
@@ -92,7 +99,7 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
 
   .place-card__rating {
     font-size: 0.85rem;
-    color: #f59e0b;
+    color: var(--star);
     letter-spacing: 0.05em;
   }
 
