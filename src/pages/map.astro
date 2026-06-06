@@ -19,66 +19,14 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
 }));
 ---
 
-<Base title="Map" description="Overview map of all visited places" base={base}>
-  <header class="page-header">
-    <h1>All places</h1>
-    <p class="page-header__sub">{markers.length} places on the map</p>
-  </header>
-
-  <LeafletMap id="overview-map" {markers} height="600px" zoom={12} base={base} />
-
-  <div class="legend">
-    {
-      ([
-        ["coffee", "☕"],
-        ["food", "🍜"],
-        ["sight", "🏛️"],
-        ["viewpoint", "🌅"],
-        ["stay", "🏨"],
-        ["other", "📍"],
-      ] as const).map(([cat, emoji]) => (
-        <span class="legend__item">
-          <span class="legend__emoji">{emoji}</span>
-          {cat}
-        </span>
-      ))
-    }
-  </div>
+<Base title="Map" description="Overview map of all visited places" base={base} bodyClass="map-page">
+  <LeafletMap id="overview-map" {markers} height="100%" zoom={12} base={base} />
 </Base>
 
-<style>
-  .page-header {
-    margin-bottom: 1.5rem;
-  }
-  .page-header h1 {
-    margin: 0 0 0.25rem;
-  }
-  .page-header__sub {
-    margin: 0;
-    color: var(--muted);
-    font-family: var(--font-ui);
-    font-size: 0.85rem;
-  }
-
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    font-family: var(--font-ui);
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
-
-  .legend__item {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    text-transform: capitalize;
-  }
-
-  .legend__emoji {
-    font-size: 1rem;
-    line-height: 1;
+<style is:global>
+  body.map-page #overview-map {
+    border-radius: 0;
+    flex: 1;
+    min-height: 0;
   }
 </style>
