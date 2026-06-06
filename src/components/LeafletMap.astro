@@ -115,17 +115,61 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
       }).addTo(map);
     });
 
-    const categoryEmoji: Record<string, string> = {
-      coffee: "☕",
-      food: "🍜",
-      sight: "🏛️",
-      viewpoint: "🌅",
-      stay: "🏨",
-      other: "📍",
+    const categoryInfo: Record<string, { emoji: string; label: string }> = {
+      coffee: { emoji: "☕", label: "Coffee" },
+      food:   { emoji: "🍜", label: "Food" },
+      sight:  { emoji: "🏛️", label: "Sight" },
+      viewpoint: { emoji: "🌅", label: "Viewpoint" },
+      stay:   { emoji: "🏨", label: "Stay" },
+      other:  { emoji: "📍", label: "Other" },
     };
 
+    // Legend control
+    const usedCats = [...new Set(markers.map((m) => m.category))];
+    if (usedCats.length > 0) {
+      const LegendControl = L.Control.extend({
+        options: { position: "bottomleft" as const },
+        onAdd() {
+          const el = L.DomUtil.create("div", "map-legend");
+          L.DomEvent.disableClickPropagation(el);
+          L.DomEvent.disableScrollPropagation(el);
+
+          const rows = usedCats
+            .filter((cat) => categoryInfo[cat])
+            .map(
+              (cat) =>
+                `<div class="map-legend__row">` +
+                `<span class="map-legend__emoji">${categoryInfo[cat].emoji}</span>` +
+                `<span class="map-legend__label">${categoryInfo[cat].label}</span>` +
+                `</div>`
+            )
+            .join("");
+
+          el.innerHTML =
+            `<div class="map-legend__header">` +
+            `<span class="map-legend__title">Legend</span>` +
+            `<button class="map-legend__toggle" aria-label="Toggle legend">×</button>` +
+            `</div>` +
+            `<div class="map-legend__body">${rows}</div>`;
+
+          const toggleBtn = el.querySelector<HTMLButtonElement>(".map-legend__toggle")!;
+          const body = el.querySelector<HTMLElement>(".map-legend__body")!;
+          let open = true;
+          toggleBtn.addEventListener("click", () => {
+            open = !open;
+            body.style.display = open ? "" : "none";
+            toggleBtn.textContent = open ? "×" : "▾";
+            toggleBtn.setAttribute("aria-label", open ? "Collapse legend" : "Expand legend");
+          });
+
+          return el;
+        },
+      });
+      new LegendControl().addTo(map);
+    }
+
     for (const m of markers) {
-      const emoji = categoryEmoji[m.category] ?? "📍";
+      const emoji = (categoryInfo[m.category] ?? categoryInfo.other).emoji;
       const icon = L.divIcon({
         className: "",
         html: `<span style="display:block;font-size:28px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));user-select:none">${emoji}</span>`,
@@ -188,6 +232,77 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
     .leaflet-wrap {
       display: none;
     }
+  }
+
+  :global(.map-legend) {
+    background: var(--surface, #fff);
+    color: var(--text, #1a1a1a);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    overflow: hidden;
+    min-width: 120px;
+  }
+
+  :global(.map-legend__header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px 5px;
+    border-bottom: 1px solid var(--border, #e5e2db);
+    gap: 8px;
+  }
+
+  :global(.map-legend__title) {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--muted, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  :global(.map-legend__toggle) {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted, #6b7280);
+    font-size: 15px;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: color 0.15s;
+  }
+  :global(.map-legend__toggle:hover) {
+    color: var(--text, #1a1a1a);
+  }
+
+  :global(.map-legend__body) {
+    padding: 6px 8px 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  :global(.map-legend__row) {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  :global(.map-legend__emoji) {
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  :global(.map-legend__label) {
+    color: var(--text, #1a1a1a);
   }
 </style>
 
