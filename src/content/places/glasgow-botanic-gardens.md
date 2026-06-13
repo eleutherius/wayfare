@@ -5,7 +5,7 @@ lng: -4.2911777
 category: other
 city: Glasgow
 date: 2025-04-16
+google_maps_url: "http://maps.google.com/?cid=3908261569794001856"
 ---
 
-# google_maps_url: http://maps.google.com/?cid=3908261569794001856
 

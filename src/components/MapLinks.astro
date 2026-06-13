@@ -5,13 +5,14 @@ interface Props {
   lat: number;
   lng: number;
   title: string;
+  googleUrl?: string;
   directions?: boolean;
   class?: string;
 }
 
-const { lat, lng, title, directions = false, class: cls } = Astro.props;
+const { lat, lng, title, googleUrl, directions = false, class: cls } = Astro.props;
 
-const gmSearch = googleMaps(lat, lng);
+const gmSearch = googleUrl ?? googleMaps(lat, lng);
 const gmDir = googleDirections(lat, lng);
 const am = appleMaps(lat, lng, title);
 ---

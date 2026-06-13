@@ -44,7 +44,7 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
   city: p.data.city,
   rating: p.data.rating,
   excerpt: p.body ? firstSentence(p.body) : undefined,
-  googleUrl: googleMaps(p.data.lat, p.data.lng),
+  googleUrl: p.data.google_maps_url ?? googleMaps(p.data.lat, p.data.lng),
   appleUrl: appleMaps(p.data.lat, p.data.lng, p.data.title),
 }));
 ---

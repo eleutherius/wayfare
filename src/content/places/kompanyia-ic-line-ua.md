@@ -5,7 +5,7 @@ lng: 30.6301192
 category: other
 city: Kyiv
 date: 2017-06-19
+google_maps_url: "http://maps.google.com/?cid=3559113258197661181"
 ---
 
-# google_maps_url: http://maps.google.com/?cid=3559113258197661181
 

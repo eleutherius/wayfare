@@ -12,7 +12,8 @@ export async function getStaticPaths() {
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const { place } = Astro.props;
-const { title, lat, lng, category, city, date, cover, rating } = place.data;
+const { title, lat, lng, category, city, date, cover, rating, google_maps_url } = place.data;
+const googleUrl = google_maps_url ?? googleMaps(lat, lng);
 const { Content } = await render(place);
 
 const dateStr = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date);
@@ -54,7 +55,7 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
     </header>
 
     <div class="place-detail__actions">
-      <MapLinks {lat} {lng} {title} directions />
+      <MapLinks {lat} {lng} {title} googleUrl={googleUrl} directions />
     </div>
 
     <div class="prose place-detail__story">

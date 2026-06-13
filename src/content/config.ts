@@ -25,6 +25,7 @@ const places = defineCollection({
       date: z.coerce.date(),
       cover: image().optional(),
       rating: z.number().min(1).max(5).optional(),
+      google_maps_url: z.string().url().optional(),
     }),
 });
 

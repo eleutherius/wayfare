@@ -5,7 +5,7 @@ lng: 12.472573
 category: other
 city: Roma
 date: 2025-06-30
+google_maps_url: "http://maps.google.com/?cid=851426867430969120"
 ---
 
-# google_maps_url: http://maps.google.com/?cid=851426867430969120
 
