@@ -3,14 +3,26 @@ import { getCollection } from "astro:content";
 import Base from "@/layouts/Base.astro";
 import LeafletMap from "@/components/LeafletMap.astro";
 import { googleMaps, appleMaps } from "@/lib/maplinks";
+import { PUBLISHED_CITIES } from "@/lib/published-cities";
 import type { MarkerData } from "@/lib/types";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const isDev = import.meta.env.DEV;
 
-const allPlaces = await getCollection("places");
-const allRoutes = await getCollection("routes");
+const rawPlaces = await getCollection("places");
+const rawRoutes = await getCollection("routes");
 
-const cities = [...new Set(allPlaces.map((p) => p.data.city))].sort();
+// In dev: show everything. In prod: only published cities.
+const allPlaces = isDev
+  ? rawPlaces
+  : rawPlaces.filter((p) => PUBLISHED_CITIES.includes(p.data.city));
+const allRoutes = isDev
+  ? rawRoutes
+  : rawRoutes.filter((r) => PUBLISHED_CITIES.includes(r.data.city));
+
+const cities = isDev
+  ? [...new Set(rawPlaces.map((p) => p.data.city))].sort()
+  : PUBLISHED_CITIES.slice().sort();
 
 const markers: MarkerData[] = allPlaces.map((p) => ({
   lat: p.data.lat,
@@ -30,7 +42,7 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
   <select slot="wordmark" class="city-select" id="city-select" aria-label="Filter by city">
     <option value="">Wayfare</option>
     {cities.map((city) => (
-      <option value={city}>{city}</option>
+      <option value={city} selected={city === "Bangkok"}>{city}</option>
     ))}
   </select>
 
@@ -152,8 +164,8 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
     }
   }
 
-  // Initial state: show only featured (rated) places
-  filterPlacesList("");
+  // Initial state: Bangkok
+  filterPlacesList("Bangkok");
 
   sel?.addEventListener("change", () => {
     filterPlacesList(sel.value);

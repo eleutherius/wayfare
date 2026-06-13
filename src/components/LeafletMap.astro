@@ -218,11 +218,31 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
       }
     }
 
-    if (markers.length > 1) {
-      const latlngs = markers.map(
-        (m) => [m.lat, m.lng] as L.LatLngExpression
+    // Fit bounds to the currently selected city (or all markers if none)
+    const initCity =
+      (document.getElementById("city-select") as HTMLSelectElement | null)
+        ?.value ?? "";
+    const initVisible = initCity
+      ? markerLayers.filter(({ city: mc }) => mc === initCity)
+      : markerLayers;
+
+    // Hide markers that don't belong to the initial city
+    if (initCity) {
+      for (const { layer, city: mc } of markerLayers) {
+        if (mc !== initCity) map.removeLayer(layer);
+      }
+    }
+
+    const initLatLngs = initVisible.map(({ layer }) => layer.getLatLng());
+    if (initLatLngs.length > 1) {
+      map.fitBounds(L.latLngBounds(initLatLngs), { padding: [40, 40] });
+    } else if (initLatLngs.length === 1) {
+      map.setView(initLatLngs[0], 13);
+    } else if (markers.length > 1) {
+      map.fitBounds(
+        L.latLngBounds(markers.map((m) => [m.lat, m.lng] as L.LatLngExpression)),
+        { padding: [32, 32] }
       );
-      map.fitBounds(L.latLngBounds(latlngs), { padding: [32, 32] });
     }
   }
 
