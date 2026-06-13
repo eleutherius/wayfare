@@ -3,7 +3,7 @@ title: "Atzgersdorfer Straße, Wundtgasse"
 lat: 48.1622858
 lng: 16.2918819
 category: other
-city: Відень
+city: Vienna
 date: 2017-12-04
 ---
 

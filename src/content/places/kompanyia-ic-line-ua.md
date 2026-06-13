@@ -3,7 +3,7 @@ title: "Компания IC-LINE.UA"
 lat: 50.4039938
 lng: 30.6301192
 category: other
-city: Київ
+city: Kyiv
 date: 2017-06-19
 ---
 

@@ -1,187 +1,336 @@
 ---
 import { getCollection } from "astro:content";
 import Base from "@/layouts/Base.astro";
-import PlaceCard from "@/components/PlaceCard.astro";
+import LeafletMap from "@/components/LeafletMap.astro";
+import { googleMaps, appleMaps } from "@/lib/maplinks";
+import type { MarkerData } from "@/lib/types";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const allPlaces = await getCollection("places");
 const allRoutes = await getCollection("routes");
 
-// Featured = highest-rated places (up to 6)
-const featured = [...allPlaces]
-  .filter((p) => p.data.rating != null)
-  .sort((a, b) => (b.data.rating ?? 0) - (a.data.rating ?? 0))
-  .slice(0, 6);
-
-// Unique cities
 const cities = [...new Set(allPlaces.map((p) => p.data.city))].sort();
+
+const markers: MarkerData[] = allPlaces.map((p) => ({
+  lat: p.data.lat,
+  lng: p.data.lng,
+  title: p.data.title,
+  slug: p.id,
+  category: p.data.category,
+  city: p.data.city,
+  googleUrl: googleMaps(p.data.lat, p.data.lng),
+  appleUrl: appleMaps(p.data.lat, p.data.lng, p.data.title),
+}));
 ---
 
-<Base title="Home" base={base}>
-  <section class="hero">
-    <h1 class="hero__title">Wayfare</h1>
-    <p class="hero__lead">
-      A personal collection of places worth remembering — coffee shops, temples,
-      street kitchens, viewpoints. Visited, written about, linked to maps.
-    </p>
-  </section>
+<Base title="Wayfare" description="A personal travel map" base={base} bodyClass="map-page">
 
-  {
-    featured.length > 0 && (
-      <section class="section">
-        <h2 class="section__heading">Featured places</h2>
-        <div class="card-grid">
-          {featured.map((place) => (
-            <PlaceCard {place} base={base} />
-          ))}
-        </div>
-      </section>
-    )
-  }
+  <!-- City select replaces the wordmark -->
+  <select slot="wordmark" class="city-select" id="city-select" aria-label="Filter by city">
+    <option value="">Wayfare</option>
+    {cities.map((city) => (
+      <option value={city}>{city}</option>
+    ))}
+  </select>
 
-  <div class="index-cols">
-    <section class="section">
-      <h2 class="section__heading">Cities</h2>
-      <ul class="pill-list">
-        {
-          cities.map((city) => (
-            <li>
-              <a
-                href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}
-                class="pill"
-              >
-                {city}
-                <span class="pill__count">
-                  {allPlaces.filter((p) => p.data.city === city).length}
-                </span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+  <!-- Sidebar toggle button in the nav -->
+  <button slot="nav-start" class="panel-btn" id="sidebar-toggle"
+    aria-label="Toggle panel" aria-expanded="false" aria-controls="sidebar">
+    ☰
+  </button>
 
-    {
-      allRoutes.length > 0 && (
-        <section class="section">
-          <h2 class="section__heading">Routes</h2>
-          <ul class="route-list">
-            {allRoutes.map((route) => (
-              <li class="route-list__item">
-                <a href={`${base}/routes/${route.id}`} class="route-list__link">
-                  {route.data.title}
-                  <span class="route-list__meta">
-                    {route.data.city} · {route.data.mode} ·{" "}
-                    {route.data.stops.length} stops
-                  </span>
-                </a>
-              </li>
-            ))}
+  <!-- Full-screen map -->
+  <LeafletMap id="overview-map" {markers} height="100%" zoom={4} base={base} />
+
+  <!-- Sidebar + backdrop (injected outside <main>) -->
+  <div slot="overlay">
+    <div class="s-backdrop" id="sidebar-backdrop"></div>
+
+    <aside class="s-panel" id="sidebar" aria-hidden="true">
+      <div class="s-panel__head">
+        <button class="s-panel__close" id="sidebar-close" aria-label="Close panel">×</button>
+      </div>
+
+      <div class="s-panel__body">
+
+        <details class="s-block" open>
+          <summary class="s-block__label">Featured places</summary>
+          <ul class="s-items" id="places-list">
+            {[...allPlaces]
+              .sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1))
+              .map((p) => (
+                <li
+                  data-city={p.data.city}
+                  data-featured={p.data.rating != null ? "true" : "false"}
+                >
+                  <a href={`${base}/places/${p.id}`} class="s-item">
+                    <span class="s-item__name">{p.data.title}</span>
+                    <span class="s-item__sub">{p.data.city}</span>
+                  </a>
+                </li>
+              ))}
           </ul>
-        </section>
-      )
-    }
+        </details>
+
+        {allRoutes.length > 0 && (
+          <details class="s-block" open id="routes-block">
+            <summary class="s-block__label">Routes</summary>
+            <ul class="s-items" id="routes-list">
+              {allRoutes.map((r) => (
+                <li data-city={r.data.city}>
+                  <a href={`${base}/routes/${r.id}`} class="s-item">
+                    <span class="s-item__name">{r.data.title}</span>
+                    <span class="s-item__sub">{r.data.city} · {r.data.stops.length} stops</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+
+        <div class="s-about">
+          <a href={`${base}/about`} class="s-about__link">About this project</a>
+        </div>
+
+      </div>
+    </aside>
   </div>
 </Base>
 
+<script>
+  const toggle   = document.getElementById("sidebar-toggle")!;
+  const closeBtn = document.getElementById("sidebar-close")!;
+  const backdrop = document.getElementById("sidebar-backdrop")!;
+  const sidebar  = document.getElementById("sidebar")!;
+
+  function open() {
+    sidebar.classList.add("open");
+    backdrop.classList.add("open");
+    toggle.setAttribute("aria-expanded", "true");
+    sidebar.setAttribute("aria-hidden", "false");
+  }
+  function close() {
+    sidebar.classList.remove("open");
+    backdrop.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+    sidebar.setAttribute("aria-hidden", "true");
+  }
+
+  toggle.addEventListener("click", () =>
+    sidebar.classList.contains("open") ? close() : open()
+  );
+  closeBtn.addEventListener("click", close);
+  backdrop.addEventListener("click", close);
+
+  // City filter → dispatches event picked up by LeafletMap + filters sidebar list
+  const sel = document.getElementById("city-select") as HTMLSelectElement;
+
+  function filterPlacesList(city: string) {
+    // Places
+    const placeItems = document.querySelectorAll<HTMLLIElement>("#places-list li");
+    let shown = 0;
+    for (const li of placeItems) {
+      const liCity = li.dataset.city ?? "";
+      const featured = li.dataset.featured === "true";
+      const visible = city ? liCity === city : (featured && shown < 6);
+      li.style.display = visible ? "" : "none";
+      if (visible) shown++;
+    }
+
+    // Routes — show only routes matching the city; hide the whole block if none match
+    const routesBlock = document.getElementById("routes-block");
+    const routeItems = document.querySelectorAll<HTMLLIElement>("#routes-list li");
+    if (routesBlock && routeItems.length > 0) {
+      let visibleRoutes = 0;
+      for (const li of routeItems) {
+        const matches = !city || li.dataset.city === city;
+        li.style.display = matches ? "" : "none";
+        if (matches) visibleRoutes++;
+      }
+      routesBlock.style.display = visibleRoutes > 0 ? "" : "none";
+    }
+  }
+
+  // Initial state: show only featured (rated) places
+  filterPlacesList("");
+
+  sel?.addEventListener("change", () => {
+    filterPlacesList(sel.value);
+    document.dispatchEvent(
+      new CustomEvent("cityfilter", { detail: { city: sel.value } })
+    );
+  });
+</script>
+
 <style>
-  .hero {
-    padding-block: 2.5rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 2.5rem;
-  }
-  .hero__title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    margin: 0 0 0.5rem;
-  }
-  .hero__lead {
-    font-size: 1.1rem;
-    color: var(--muted);
-    max-width: 55ch;
-    margin: 0;
-  }
-
-  .section {
-    margin-bottom: 2.5rem;
-  }
-  .section__heading {
-    font-size: 1.2rem;
-    margin: 0 0 1rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 0.8rem;
-    font-family: var(--font-ui);
-  }
-
-  .index-cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .pill-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    text-decoration: none;
-    font-family: var(--font-ui);
-    font-size: 0.87rem;
-    color: var(--text);
-    background: var(--surface);
-    transition: border-color 0.15s;
-  }
-  .pill:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .pill__count {
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-
-  .route-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-  .route-list__link {
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: var(--text);
-    font-family: var(--font-ui);
+  /* ---- City select (wordmark slot) ------------------------------------ */
+  .city-select {
+    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.97rem;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    transition: border-color 0.15s;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    appearance: auto;
+    max-width: 200px;
   }
-  .route-list__link:hover {
+  .city-select:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- Panel toggle button (nav-start slot) --------------------------- */
+  .panel-btn {
+    display: grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+  }
+  .panel-btn:hover,
+  .panel-btn[aria-expanded="true"] {
+    color: var(--accent);
     border-color: var(--accent);
   }
-  .route-list__meta {
-    font-weight: 400;
-    font-size: 0.78rem;
-    color: var(--muted);
-    text-transform: capitalize;
-    margin-top: 2px;
+
+  /* ---- Backdrop ------------------------------------------------------- */
+  .s-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    top: 3.5rem;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 999;
   }
+  .s-backdrop.open { display: block; }
+
+  /* ---- Sidebar panel -------------------------------------------------- */
+  .s-panel {
+    position: fixed;
+    top: 3.5rem;
+    left: 0;
+    width: 300px;
+    height: calc(100dvh - 3.5rem);
+    background: var(--paper-raised);
+    border-right: 1px solid var(--line-strong);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.25s var(--ease);
+  }
+  .s-panel.open { transform: translateX(0); }
+
+  .s-panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--line-strong);
+    flex-shrink: 0;
+  }
+  .s-panel__close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+  }
+  .s-panel__close:hover { color: var(--ink); }
+
+  .s-panel__body {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  /* ---- Collapsible sections ------------------------------------------- */
+  .s-block {
+    border-bottom: 1px solid var(--line);
+  }
+  .s-block__label {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .s-block__label::-webkit-details-marker { display: none; }
+  .s-block__label::after {
+    content: "▾";
+    font-size: 0.6rem;
+    transition: transform 0.2s;
+  }
+  .s-block__label:hover { color: var(--ink); }
+  details[open] > .s-block__label::after { transform: rotate(180deg); }
+
+  /* ---- List items ----------------------------------------------------- */
+  .s-items {
+    list-style: none;
+    padding: 0 0 0.5rem;
+    margin: 0;
+  }
+  .s-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1.25rem;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.15s;
+  }
+  .s-item:hover {
+    background: var(--accent-weak);
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .s-item__name {
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .s-item__sub {
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-top: 1px;
+  }
+
+  /* ---- About link ----------------------------------------------------- */
+  .s-about {
+    padding: 1rem 1.25rem 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .s-about__link {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .s-about__link:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
 </style>

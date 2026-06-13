@@ -3,7 +3,7 @@ title: "Архикатедральний Собор Святого Юра"
 lat: 49.8385979
 lng: 24.0133194
 category: other
-city: Львів
+city: Lviv
 date: 2018-05-10
 ---
 

@@ -20,3 +20,4 @@ coverage/
 *.tscache
 *.vscode/
 *.idea/
+.astro

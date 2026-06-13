@@ -37,10 +37,11 @@ const siteName = "Wayfare";
 
     <header class="site-header">
       <div class="site-header__inner container">
-        <a class="wordmark" href={`${base}/`}>{siteName}</a>
+        <slot name="wordmark">
+          <a class="wordmark" href={`${base}/`}>{siteName}</a>
+        </slot>
         <nav class="nav" aria-label="Main navigation">
-          <a href={`${base}/`}>Home</a>
-          <a href={`${base}/map`}>Map</a>
+          <slot name="nav-start" />
           <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" type="button">
             <span class="theme-toggle__icon"></span>
           </button>
@@ -55,6 +56,8 @@ const siteName = "Wayfare";
     <footer class="site-footer">
       <p>Personal travel notes. No affiliation with any business listed.</p>
     </footer>
+
+    <slot name="overlay" />
 
     <script is:inline>
       (function () {

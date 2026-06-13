@@ -168,6 +168,8 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
       new LegendControl().addTo(map);
     }
 
+    const markerLayers: Array<{ layer: L.Marker; city: string }> = [];
+
     for (const m of markers) {
       const emoji = (categoryInfo[m.category] ?? categoryInfo.other).emoji;
       const icon = L.divIcon({
@@ -186,8 +188,26 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
         <a href="${m.appleUrl}" target="_blank" rel="noopener">Apple Maps</a>
       `;
 
-      L.marker([m.lat, m.lng], { icon }).bindPopup(popupHtml).addTo(map);
+      const layer = L.marker([m.lat, m.lng], { icon }).bindPopup(popupHtml).addTo(map);
+      markerLayers.push({ layer, city: m.city ?? "" });
     }
+
+    // Filter markers by city when the city-select dispatches "cityfilter"
+    document.addEventListener("cityfilter", (e: Event) => {
+      const { city } = (e as CustomEvent<{ city: string }>).detail;
+      for (const { layer, city: mc } of markerLayers) {
+        if (!city || mc === city) {
+          if (!map.hasLayer(layer)) layer.addTo(map);
+        } else {
+          if (map.hasLayer(layer)) map.removeLayer(layer);
+        }
+      }
+      const visible = markerLayers
+        .filter(({ city: mc }) => !city || mc === city)
+        .map(({ layer }) => layer.getLatLng());
+      if (visible.length > 1) map.fitBounds(L.latLngBounds(visible), { padding: [40, 40] });
+      else if (visible.length === 1) map.setView(visible[0], 13);
+    });
 
     if (track) {
       const geoJsonLayer = L.geoJSON(track as GeoJSON.GeoJsonObject, {

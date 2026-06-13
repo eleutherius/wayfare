@@ -12,6 +12,7 @@ export interface MarkerData {
   title: string;
   slug: string;
   category: PlaceCategory;
+  city?: string;
   googleUrl: string;
   appleUrl: string;
 }
