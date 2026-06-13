@@ -58,6 +58,7 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
   import "leaflet/dist/leaflet.css";
   import L from "leaflet";
   import type { MarkerData, TrackData } from "@/lib/types";
+import { navigate } from "astro:transitions/client";
 
   interface MapPayload {
     markers: MarkerData[];
@@ -121,6 +122,11 @@ const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, b
       sight:  { emoji: "🏛️", label: "Sight" },
       viewpoint: { emoji: "🌅", label: "Viewpoint" },
       stay:   { emoji: "🏨", label: "Stay" },
+      nightlife: { emoji: "🍸", label: "Nightlife" },
+      nightmarket: { emoji: "🛍️", label: "Night Market" },
+      rooftopbar: { emoji: "🍹", label: "Rooftop Bar" },
+      sportplace: { emoji: "⚽", label: "Sport" },
+      mall:    { emoji: "🛒", label: "Mall" },
       other:  { emoji: "📍", label: "Other" },
     };
 

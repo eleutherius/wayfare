@@ -3,9 +3,7 @@ import { getCollection, render } from "astro:content";
 import { Image } from "astro:assets";
 import Base from "@/layouts/Base.astro";
 import MapLinks from "@/components/MapLinks.astro";
-import LeafletMap from "@/components/LeafletMap.astro";
 import { googleMaps, appleMaps } from "@/lib/maplinks";
-import type { MarkerData } from "@/lib/types";
 
 export async function getStaticPaths() {
   const places = await getCollection("places");
@@ -20,13 +18,7 @@ const { Content } = await render(place);
 const dateStr = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date);
 const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
 
-const marker: MarkerData = {
-  lat, lng, title,
-  slug: place.id,
-  category,
-  googleUrl: googleMaps(lat, lng),
-  appleUrl: appleMaps(lat, lng, title),
-};
+
 ---
 
 <Base title={title} description={`${title} — ${city}`} base={base}>
@@ -60,17 +52,6 @@ const marker: MarkerData = {
       <h1 class="place-detail__title">{title}</h1>
       {stars && <div class="place-detail__rating" aria-label={`Rating: ${rating} of 5`}>{stars}</div>}
     </header>
-
-    <div class="place-detail__map">
-      <LeafletMap
-        id="place-map"
-        markers={[marker]}
-        center={[lat, lng]}
-        zoom={16}
-        height="280px"
-        base={base}
-      />
-    </div>
 
     <div class="place-detail__actions">
       <MapLinks {lat} {lng} {title} directions />
@@ -135,10 +116,6 @@ const marker: MarkerData = {
     color: var(--star);
     letter-spacing: 0.08em;
     margin-bottom: 1rem;
-  }
-
-  .place-detail__map {
-    margin-block: 1.5rem;
   }
 
   .place-detail__actions {

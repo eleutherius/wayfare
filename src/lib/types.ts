@@ -4,6 +4,11 @@ export type PlaceCategory =
   | "sight"
   | "viewpoint"
   | "stay"
+  | "nightlife"
+  | "nightmarket"
+  | "rooftopbar"
+  | "sportplace"
+  | "mall"
   | "other";
 
 export interface MarkerData {

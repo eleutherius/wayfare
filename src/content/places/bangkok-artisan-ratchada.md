@@ -2,7 +2,7 @@
 title: "Artisan Ratchada"
 lat: 13.7691431
 lng: 100.5827871
-category: other
+category: stay
 city: Bangkok
 date: 2026-01-03
 rating: 3

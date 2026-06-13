@@ -1,5 +1,5 @@
 ---
-title: "Wat Pho — Reclining Buddha"
+title: "Wat Pho - Reclining Buddha"
 lat: 13.7466
 lng: 100.4927
 category: sight

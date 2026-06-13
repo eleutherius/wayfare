@@ -2,7 +2,7 @@
 title: "Belle Grand Rama 9"
 lat: 13.7600705
 lng: 100.5691948
-category: other
+category: stay
 city: Bangkok
 date: 2026-02-14
 ---
