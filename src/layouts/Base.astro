@@ -21,6 +21,9 @@ const siteName = config.site.name;
     <meta name="generator" content={Astro.generator} />
     <title>{title === siteName ? siteName : `${title} — ${siteName}`}</title>
     {description && <meta name="description" content={description} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title === siteName ? siteName : `${title} — ${siteName}`} />
+    {description && <meta property="og:description" content={description} />}
     <meta property="og:image" content="https://eleutherius.github.io/wayfare/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
