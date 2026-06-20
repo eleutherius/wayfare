@@ -4,6 +4,7 @@ import { Image } from "astro:assets";
 import Base from "@/layouts/Base.astro";
 import MapLinks from "@/components/MapLinks.astro";
 import { googleMaps, appleMaps } from "@/lib/maplinks";
+import { config } from "@/config";
 
 export async function getStaticPaths() {
   const places = await getCollection("places");
@@ -17,7 +18,7 @@ const googleUrl = google_maps_url ?? googleMaps(lat, lng);
 const { Content } = await render(place);
 
 const dateStr = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date);
-const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
+const stars = config.show.ratings && rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
 
 
 ---
@@ -40,9 +41,11 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
 
     <header class="place-detail__header">
       <div class="place-detail__meta">
-        <a href={`${base}/category/${category}`} class="place-detail__category"
-          >{category}</a
-        >
+        {config.show.categoryLinks ? (
+          <a href={`${base}/category/${category}`} class="place-detail__category">{category}</a>
+        ) : (
+          <span class="place-detail__category">{category}</span>
+        )}
         <span class="sep">·</span>
         <a href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}
           >{city}</a
@@ -54,9 +57,11 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
       {stars && <div class="place-detail__rating" aria-label={`Rating: ${rating} of 5`}>{stars}</div>}
     </header>
 
-    <div class="place-detail__actions">
-      <MapLinks {lat} {lng} {title} googleUrl={googleUrl} directions />
-    </div>
+    {config.show.mapLinks && (
+      <div class="place-detail__actions">
+        <MapLinks {lat} {lng} {title} googleUrl={googleUrl} directions />
+      </div>
+    )}
 
     <div class="prose place-detail__story">
       <Content />

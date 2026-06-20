@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import { config } from "@/config";
 
 interface Props {
   title: string;
@@ -8,8 +9,8 @@ interface Props {
   bodyClass?: string;
 }
 
-const { title, description = "Wayfare — a personal travel guide", base = "", bodyClass = "" } = Astro.props;
-const siteName = "Wayfare";
+const { title, description = `${config.site.name} — a personal travel guide`, base = "", bodyClass = "" } = Astro.props;
+const siteName = config.site.name;
 ---
 
 <!doctype html>
@@ -18,7 +19,7 @@ const siteName = "Wayfare";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} — {siteName}</title>
+    <title>{title === siteName ? siteName : `${title} — ${siteName}`}</title>
     {description && <meta name="description" content={description} />}
     <meta property="og:image" content="https://eleutherius.github.io/wayfare/og.png" />
     <meta name="twitter:card" content="summary_large_image" />

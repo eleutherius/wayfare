@@ -5,6 +5,7 @@ import RouteTimeline from "@/components/RouteTimeline.astro";
 import LeafletMap from "@/components/LeafletMap.astro";
 import { googleMaps, appleMaps } from "@/lib/maplinks";
 import { validateRouteStops } from "@/lib/validate-references";
+import { config } from "@/config";
 import type { MarkerData, TrackData } from "@/lib/types";
 
 export async function getStaticPaths() {
@@ -68,9 +69,11 @@ if (track) {
         <span class="badge">{mode}</span>
         <span>{stops.length} stops</span>
         {dateStr && <time datetime={date?.toISOString()}>{dateStr}</time>}
-        <a href={`${base}/routes/${route.id}.print`} class="print-link">
-          🖨 Print / PDF
-        </a>
+        {config.show.printButton && (
+          <a href={`${base}/routes/${route.id}.print`} class="print-link">
+            🖨 Print / PDF
+          </a>
+        )}
       </div>
     </header>
 

@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import Base from "@/layouts/Base.astro";
 import LeafletMap from "@/components/LeafletMap.astro";
 import { googleMaps, appleMaps } from "@/lib/maplinks";
-import { PUBLISHED_CITIES } from "@/lib/published-cities";
+import { config } from "@/config";
 import type { MarkerData } from "@/lib/types";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -15,14 +15,14 @@ const rawRoutes = await getCollection("routes");
 // In dev: show everything. In prod: only published cities.
 const allPlaces = isDev
   ? rawPlaces
-  : rawPlaces.filter((p) => PUBLISHED_CITIES.includes(p.data.city));
+  : rawPlaces.filter((p) => config.publishedCities.includes(p.data.city));
 const allRoutes = isDev
   ? rawRoutes
-  : rawRoutes.filter((r) => PUBLISHED_CITIES.includes(r.data.city));
+  : rawRoutes.filter((r) => config.publishedCities.includes(r.data.city));
 
 const cities = isDev
   ? [...new Set(rawPlaces.map((p) => p.data.city))].sort()
-  : PUBLISHED_CITIES.slice().sort();
+  : config.publishedCities.slice().sort();
 
 function firstSentence(body: string, max = 120): string {
   const text = body
@@ -49,13 +49,13 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
 }));
 ---
 
-<Base title="Wayfare" description="A personal travel map" base={base} bodyClass="map-page">
+<Base title={config.site.name} description={config.site.description} base={base} bodyClass="map-page">
 
   <!-- City select replaces the wordmark -->
   <select slot="wordmark" class="city-select" id="city-select" aria-label="Filter by city">
-    <option value="">Wayfare</option>
+    <option value="">{config.site.name}</option>
     {cities.map((city) => (
-      <option value={city} selected={city === "Bangkok"}>{city}</option>
+      <option value={city} selected={city === config.defaultCity}>{city}</option>
     ))}
   </select>
 
@@ -98,7 +98,7 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
           </ul>
         </details>
 
-        {allRoutes.length > 0 && (
+        {config.show.routes && allRoutes.length > 0 && (
           <details class="s-block" open id="routes-block">
             <summary class="s-block__label">Routes</summary>
             <ul class="s-items" id="routes-list">
@@ -114,9 +114,11 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
           </details>
         )}
 
-        <div class="s-about">
-          <a href={`${base}/about`} class="s-about__link">About this project</a>
-        </div>
+        {config.show.aboutPage && (
+          <div class="s-about">
+            <a href={`${base}/about`} class="s-about__link">About this project</a>
+          </div>
+        )}
 
       </div>
     </aside>
@@ -177,8 +179,9 @@ const markers: MarkerData[] = allPlaces.map((p) => ({
     }
   }
 
-  // Initial state: Bangkok
-  filterPlacesList("Bangkok");
+  // Initial state: default city from config (passed via the selected option)
+  const initialCity = (document.getElementById("city-select") as HTMLSelectElement)?.value ?? "";
+  filterPlacesList(initialCity);
 
   sel?.addEventListener("change", () => {
     filterPlacesList(sel.value);
