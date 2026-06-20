@@ -120,6 +120,35 @@ import { navigate } from "astro:transitions/client";
 
     const categoryInfo = categories;
 
+    // Count markers per category
+    const catCounts: Record<string, number> = {};
+    for (const m of markers) {
+      catCounts[m.category] = (catCounts[m.category] ?? 0) + 1;
+    }
+
+    const markerLayers: Array<{ layer: L.Marker; city: string; category: string }> = [];
+    let activeFilter: string | null = null;
+
+    function applyFilter(cat: string | null) {
+      activeFilter = cat;
+      const cityVal =
+        (document.getElementById("city-select") as HTMLSelectElement | null)?.value ?? "";
+      for (const { layer, city: mc, category: mCat } of markerLayers) {
+        const cityOk = !cityVal || mc === cityVal;
+        const catOk = !cat || mCat === cat;
+        if (cityOk && catOk) {
+          if (!map.hasLayer(layer)) layer.addTo(map);
+        } else {
+          if (map.hasLayer(layer)) map.removeLayer(layer);
+        }
+      }
+      // Update legend row styles
+      document.querySelectorAll<HTMLElement>(".map-legend__row[data-cat]").forEach((row) => {
+        row.classList.toggle("map-legend__row--active", row.dataset.cat === cat);
+        row.classList.toggle("map-legend__row--dimmed", !!cat && row.dataset.cat !== cat);
+      });
+    }
+
     // Legend control
     const usedCats = [...new Set(markers.map((m) => m.category))];
     if (usedCats.length > 0) {
@@ -134,9 +163,10 @@ import { navigate } from "astro:transitions/client";
             .filter((cat) => categoryInfo[cat])
             .map(
               (cat) =>
-                `<div class="map-legend__row">` +
+                `<div class="map-legend__row" data-cat="${cat}" role="button" tabindex="0">` +
                 `<span class="map-legend__emoji">${categoryInfo[cat].emoji}</span>` +
                 `<span class="map-legend__label">${categoryInfo[cat].label}</span>` +
+                `<span class="map-legend__count">${catCounts[cat] ?? 0}</span>` +
                 `</div>`
             )
             .join("");
@@ -158,13 +188,18 @@ import { navigate } from "astro:transitions/client";
             toggleBtn.setAttribute("aria-label", open ? "Collapse legend" : "Expand legend");
           });
 
+          el.querySelectorAll<HTMLElement>(".map-legend__row[data-cat]").forEach((row) => {
+            row.addEventListener("click", () => {
+              const cat = row.dataset.cat!;
+              applyFilter(activeFilter === cat ? null : cat);
+            });
+          });
+
           return el;
         },
       });
       new LegendControl().addTo(map);
     }
-
-    const markerLayers: Array<{ layer: L.Marker; city: string }> = [];
 
     for (const m of markers) {
       const emoji = (categoryInfo[m.category] ?? categoryInfo.other).emoji;
@@ -196,12 +231,30 @@ import { navigate } from "astro:transitions/client";
       `;
 
       const layer = L.marker([m.lat, m.lng], { icon }).bindPopup(popupHtml).addTo(map);
-      markerLayers.push({ layer, city: m.city ?? "" });
+      markerLayers.push({ layer, city: m.city ?? "", category: m.category });
+    }
+
+    function updateLegendCounts(city: string) {
+      const counts: Record<string, number> = {};
+      for (const { city: mc, category: mCat } of markerLayers) {
+        if (!city || mc === city) {
+          counts[mCat] = (counts[mCat] ?? 0) + 1;
+        }
+      }
+      document.querySelectorAll<HTMLElement>(".map-legend__row[data-cat]").forEach((row) => {
+        const cat = row.dataset.cat!;
+        const countEl = row.querySelector(".map-legend__count");
+        if (countEl) countEl.textContent = String(counts[cat] ?? 0);
+      });
     }
 
     // Filter markers by city when the city-select dispatches "cityfilter"
     document.addEventListener("cityfilter", (e: Event) => {
       const { city } = (e as CustomEvent<{ city: string }>).detail;
+      activeFilter = null;
+      document.querySelectorAll<HTMLElement>(".map-legend__row[data-cat]").forEach((row) => {
+        row.classList.remove("map-legend__row--active", "map-legend__row--dimmed");
+      });
       for (const { layer, city: mc } of markerLayers) {
         if (!city || mc === city) {
           if (!map.hasLayer(layer)) layer.addTo(map);
@@ -209,6 +262,7 @@ import { navigate } from "astro:transitions/client";
           if (map.hasLayer(layer)) map.removeLayer(layer);
         }
       }
+      updateLegendCounts(city);
       const visible = markerLayers
         .filter(({ city: mc }) => !city || mc === city)
         .map(({ layer }) => layer.getLatLng());
@@ -238,6 +292,7 @@ import { navigate } from "astro:transitions/client";
       for (const { layer, city: mc } of markerLayers) {
         if (mc !== initCity) map.removeLayer(layer);
       }
+      updateLegendCounts(initCity);
     }
 
     const initLatLngs = initVisible.map(({ layer }) => layer.getLatLng());
@@ -340,6 +395,19 @@ import { navigate } from "astro:transitions/client";
     display: flex;
     align-items: center;
     gap: 7px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  :global(.map-legend__row:hover) {
+    background: rgba(0, 0, 0, 0.06);
+  }
+  :global(.map-legend__row--active) {
+    background: rgba(0, 0, 0, 0.08);
+  }
+  :global(.map-legend__row--dimmed) {
+    opacity: 0.35;
   }
 
   :global(.map-legend__emoji) {
@@ -350,6 +418,15 @@ import { navigate } from "astro:transitions/client";
 
   :global(.map-legend__label) {
     color: var(--text, #1a1a1a);
+    flex: 1;
+  }
+
+  :global(.map-legend__count) {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted, #6b7280);
+    min-width: 16px;
+    text-align: right;
   }
 
   /* ---- Marker popup --------------------------------------------------- */
