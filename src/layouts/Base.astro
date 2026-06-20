@@ -20,6 +20,8 @@ const siteName = "Wayfare";
     <meta name="generator" content={Astro.generator} />
     <title>{title} — {siteName}</title>
     {description && <meta name="description" content={description} />}
+    <meta property="og:image" content="https://eleutherius.github.io/wayfare/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <!-- Prevent flash of wrong theme: runs before any CSS paints -->
     <script is:inline>
