@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import MapLinks from "./MapLinks.astro";
+import { config } from "@/config";
 
 interface Props {
   place: CollectionEntry<"places">;
@@ -11,6 +12,7 @@ interface Props {
 const { place, base = "" } = Astro.props;
 const { title, category, city, rating, cover, lat, lng } = place.data;
 const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
+const cat = config.categories[category] ?? config.categories.other;
 ---
 
 <article class="place-card">
@@ -28,7 +30,7 @@ const stars = rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
     )
   }
   <div class="place-card__body">
-    <span class="place-card__category">{category}</span>
+    <span class="place-card__category">{cat.emoji} {cat.label}</span>
     <h3 class="place-card__title">
       <a href={`${base}/places/${place.id}`}>{title}</a>
     </h3>

@@ -19,6 +19,7 @@ const { Content } = await render(place);
 
 const dateStr = new Intl.DateTimeFormat("en-GB", { dateStyle: "long" }).format(date);
 const stars = config.show.ratings && rating ? "★".repeat(rating) + "☆".repeat(5 - rating) : null;
+const cat = config.categories[category] ?? config.categories.other;
 
 
 ---
@@ -42,9 +43,9 @@ const stars = config.show.ratings && rating ? "★".repeat(rating) + "☆".repea
     <header class="place-detail__header">
       <div class="place-detail__meta">
         {config.show.categoryLinks ? (
-          <a href={`${base}/category/${category}`} class="place-detail__category">{category}</a>
+          <a href={`${base}/category/${category}`} class="place-detail__category">{cat.emoji} {cat.label}</a>
         ) : (
-          <span class="place-detail__category">{category}</span>
+          <span class="place-detail__category">{cat.emoji} {cat.label}</span>
         )}
         <span class="sep">·</span>
         <a href={`${base}/city/${encodeURIComponent(city.toLowerCase())}`}

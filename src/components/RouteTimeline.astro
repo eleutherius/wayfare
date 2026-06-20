@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import MapLinks from "./MapLinks.astro";
+import { config } from "@/config";
 
 interface Stop {
   place: string;
@@ -24,6 +25,7 @@ const { stops, placesMap, base = "" } = Astro.props;
       const place = placesMap.get(stop.place);
       if (!place) return null;
       const { title, lat, lng, category } = place.data;
+      const cat = config.categories[category] ?? config.categories.other;
       return (
         <li class="timeline__item">
           <div class="timeline__time">
@@ -35,7 +37,7 @@ const { stops, placesMap, base = "" } = Astro.props;
             {i < stops.length - 1 && <span class="timeline__line" />}
           </div>
           <div class="timeline__content">
-            <span class="timeline__category">{category}</span>
+            <span class="timeline__category">{cat.emoji} {cat.label}</span>
             <h3 class="timeline__title">
               <a href={`${base}/places/${place.id}`}>{title}</a>
             </h3>

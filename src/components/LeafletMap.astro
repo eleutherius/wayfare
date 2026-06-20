@@ -8,6 +8,7 @@
  */
 import type { MarkerData, TrackData } from "@/lib/types";
 export type { MarkerData, TrackData } from "@/lib/types";
+import { config } from "@/config";
 
 interface Props {
   id: string;
@@ -35,7 +36,7 @@ const computedCenter =
     ? ([markers[0].lat, markers[0].lng] as [number, number])
     : ([13.75, 100.52] as [number, number]));
 
-const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, base })
+const payload = JSON.stringify({ markers, track, center: computedCenter, zoom, base, categories: config.categories })
   .replace(/<\/script>/gi, "<\\/script>");
 ---
 
@@ -66,6 +67,7 @@ import { navigate } from "astro:transitions/client";
     center: [number, number];
     zoom: number;
     base: string;
+    categories: Record<string, { emoji: string; label: string }>;
   }
 
   const TILE_LAYERS = {
@@ -88,7 +90,7 @@ import { navigate } from "astro:transitions/client";
     const dataEl = document.getElementById(`${containerId}-data`);
     if (!container || !dataEl) return;
 
-    const { markers, track, center, zoom, base } = JSON.parse(
+    const { markers, track, center, zoom, base, categories } = JSON.parse(
       dataEl.textContent ?? "{}"
     ) as MapPayload;
 
@@ -116,19 +118,7 @@ import { navigate } from "astro:transitions/client";
       }).addTo(map);
     });
 
-    const categoryInfo: Record<string, { emoji: string; label: string }> = {
-      coffee: { emoji: "☕", label: "Coffee" },
-      food:   { emoji: "🍜", label: "Food" },
-      sight:  { emoji: "🏛️", label: "Sight" },
-      viewpoint: { emoji: "🌅", label: "Viewpoint" },
-      stay:   { emoji: "🏨", label: "Stay" },
-      nightlife: { emoji: "🍸", label: "Nightlife" },
-      nightmarket: { emoji: "🛍️", label: "Night Market" },
-      rooftopbar: { emoji: "🍹", label: "Rooftop Bar" },
-      sportplace: { emoji: "⚽", label: "Sport" },
-      mall:    { emoji: "🛒", label: "Mall" },
-      other:  { emoji: "📍", label: "Other" },
-    };
+    const categoryInfo = categories;
 
     // Legend control
     const usedCats = [...new Set(markers.map((m) => m.category))];

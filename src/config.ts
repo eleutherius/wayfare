@@ -4,24 +4,30 @@ export const config = {
     description: "A personal travel map",
   },
 
-  /** Cities visible in production. In dev mode all cities are shown regardless. */
   publishedCities: ["Bangkok"],
 
-  /** City selected by default on the home page. */
   defaultCity: "Bangkok",
 
+  categories: {
+    coffee:      { emoji: "☕", label: "Coffee" },
+    food:        { emoji: "🍜", label: "Food" },
+    sight:       { emoji: "🏛️", label: "Sight" },
+    viewpoint:   { emoji: "🌅", label: "Viewpoint" },
+    stay:        { emoji: "🏨", label: "Stay" },
+    nightlife:   { emoji: "🍸", label: "Nightlife" },
+    nightmarket: { emoji: "🛍️", label: "Night Market" },
+    rooftopbar:  { emoji: "🍹", label: "Rooftop Bar" },
+    sportplace:  { emoji: "⚽", label: "Sport" },
+    mall:        { emoji: "🛒", label: "Shopping Mall" },
+    other:       { emoji: "📍", label: "Other" },
+  } as Record<string, { emoji: string; label: string }>,
+
   show: {
-    /** Routes section in sidebar and route pages. */
     routes: true,
-    /** Star ratings on place pages. */
     ratings: true,
-    /** "About this project" link in sidebar + about page. */
     aboutPage: true,
-    /** Category links on place detail pages. */
     categoryLinks: true,
-    /** Google Maps / Apple Maps links on place pages. */
     mapLinks: true,
-    /** "Print / PDF" button on route pages. */
     printButton: true,
   },
 };
