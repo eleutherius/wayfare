@@ -42,26 +42,25 @@ def slugify(name: str) -> str:
 # ── URL resolution ────────────────────────────────────────────────────────────
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
-def resolve_url(url: str) -> str:
-    """Read the Location header from a short URL without following JS redirects."""
-    parsed = urlparse(url)
-    path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
-    try:
-        conn = http.client.HTTPSConnection(parsed.netloc, timeout=15)
-        conn.request("HEAD", path, headers=HEADERS)
-        resp = conn.getresponse()
-        location = resp.getheader("location", "")
-        if resp.status in (301, 302, 303, 307, 308) and location:
-            return location
-        return url
-    except Exception as e:
-        print(f"    warning: {e}")
-        return url
-    finally:
+def resolve_url(url: str, max_hops: int = 5) -> str:
+    """Follow redirects until a non-redirect or max hops is reached."""
+    for _ in range(max_hops):
+        parsed = urlparse(url)
+        path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
         try:
+            conn = http.client.HTTPSConnection(parsed.netloc, timeout=15)
+            conn.request("HEAD", path, headers=HEADERS)
+            resp = conn.getresponse()
+            location = resp.getheader("location", "")
             conn.close()
-        except Exception:
-            pass
+            if resp.status in (301, 302, 303, 307, 308) and location:
+                url = location
+                continue
+            return url
+        except Exception as e:
+            print(f"    warning: {e}")
+            return url
+    return url
 
 # ── Google Maps URL parsing ───────────────────────────────────────────────────
 def parse_maps_url(url: str) -> dict:
@@ -73,11 +72,17 @@ def parse_maps_url(url: str) -> dict:
     if m:
         info["name"] = unquote(m.group(1).replace("+", " ")).strip()
 
-    # Coordinates from @lat,lng
-    m = re.search(r"@(-?\d+\.\d+),(-?\d+\.\d+)", url)
-    if m:
-        info["lat"] = float(m.group(1))
-        info["lng"] = float(m.group(2))
+    # Prefer !3d/!4d (actual place coords) over @ (viewport center)
+    m3d = re.search(r"!3d(-?\d+\.\d+)", url)
+    m4d = re.search(r"!4d(-?\d+\.\d+)", url)
+    if m3d and m4d:
+        info["lat"] = float(m3d.group(1))
+        info["lng"] = float(m4d.group(1))
+    else:
+        m = re.search(r"@(-?\d+\.\d+),(-?\d+\.\d+)", url)
+        if m:
+            info["lat"] = float(m.group(1))
+            info["lng"] = float(m.group(2))
 
     # CID → prefer cleaner ?cid= link
     m = re.search(r"[?&]cid=(\d+)", url)
@@ -126,7 +131,7 @@ def main() -> None:
         # Resolve short link
         final_url = resolve_url(raw_url)
         if final_url != raw_url:
-            print(f"  resolved: {final_url[:90]}")
+            print(f"  resolved: {final_url}")
 
         info = parse_maps_url(final_url)
         name = info.get("name", "")
