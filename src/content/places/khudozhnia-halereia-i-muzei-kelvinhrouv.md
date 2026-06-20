@@ -1,5 +1,5 @@
 ---
-title: "Художня галерея і музей Келвінгроув"
+title: "Kelvingrove Art Gallery and Museum"
 lat: 55.8685891
 lng: -4.2906039
 category: other

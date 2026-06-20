@@ -1,7 +1,7 @@
 ---
 title: "i-Store Self Storage"
-lat: 13.703497
-lng: 100.5989437
+lat: 13.703504046926032
+lng: 100.59894191052952
 category: other
 city: Bangkok
 date: 2026-06-20

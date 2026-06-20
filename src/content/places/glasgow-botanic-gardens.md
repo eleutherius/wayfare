@@ -1,7 +1,7 @@
 ---
 title: "Glasgow Botanic Gardens"
-lat: 55.8797045
-lng: -4.2911777
+lat: 55.879778130346075
+lng: -4.291195716656916
 category: other
 city: Glasgow
 date: 2025-04-16

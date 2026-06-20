@@ -1,5 +1,5 @@
 ---
-title: "Архикатедральний Собор Святого Юра"
+title: "St. George's Archcathedral"
 lat: 49.8385979
 lng: 24.0133194
 category: other

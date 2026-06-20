@@ -1,8 +1,8 @@
 ---
 title: "Hidden Bangkok Bistro จอดรถยนต์ปากซอยเทอดไท 26"
-lat: 13.7147294
-lng: 100.4704539
-category: other
+lat: 13.72154196010993
+lng: 100.47193082405742
+category: coffee
 city: Bangkok
 date: 2026-06-14
 google_maps_url: "https://maps.app.goo.gl/4GFRwuPq3wHuyc7p7"

@@ -19,6 +19,13 @@ export const config = {
     rooftopbar:  { emoji: "🍹", label: "Rooftop Bar" },
     sportplace:  { emoji: "⚽", label: "Sport" },
     mall:        { emoji: "🛒", label: "Shopping Mall" },
+    gallery:     { emoji: "🖼️", label: "Gallery" },
+    museum:     { emoji: "🏛️", label: "Museum" },
+    temple:     { emoji: "⛩️", label: "Temple" },
+    bar:         { emoji: "🍺", label: "Bar" },
+    rooftop:      { emoji: "🏙️", label: "Rooftop" },
+    coworking:     { emoji: "💻", label: "Coworking" },
+    market:      { emoji: "🧺", label: "Market" },
     other:       { emoji: "📍", label: "Other" },
   } as Record<string, { emoji: string; label: string }>,
 

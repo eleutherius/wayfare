@@ -1,7 +1,7 @@
 ---
 title: "PSYCHE DREAM SPA"
-lat: 13.7514733
-lng: 100.5758775
+lat: 13.751481622728752
+lng: 100.57587780273492
 category: other
 city: Bangkok
 date: 2026-06-20

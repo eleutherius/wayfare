@@ -1,7 +1,7 @@
 ---
 title: "Charoen Krung 32 Street Art"
-lat: 13.7219581
-lng: 100.4907694
+lat: 13.727412163215641
+lng: 100.51452010495686
 category: other
 city: Bangkok
 date: 2026-06-14

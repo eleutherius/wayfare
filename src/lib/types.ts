@@ -9,6 +9,13 @@ export type PlaceCategory =
   | "rooftopbar"
   | "sportplace"
   | "mall"
+  | "gallery"
+  | "museum"
+  | "temple"
+  | "bar"
+  | "rooftop"
+  | "coworking"
+  | "market"
   | "other";
 
 export interface MarkerData {
