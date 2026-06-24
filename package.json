@@ -13,12 +13,14 @@
   },
   "dependencies": {
     "astro": "^5.8.0",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
     "@tmcw/togeojson": "^5.8.1",
     "@types/leaflet": "^1.9.14",
+    "@types/leaflet.markercluster": "^1.5.6",
     "@types/node": "^22.19.20",
     "@xmldom/xmldom": "^0.9.8",
     "playwright": "^1.50.0",
